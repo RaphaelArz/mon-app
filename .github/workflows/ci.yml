@@ -23,11 +23,18 @@ jobs:
       - name: Deploy application
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
+            # Aller dans le répertoire de l'application
             cd /home/raphaelserv/mon-app
+
+            # Mettre à jour le code depuis le dépôt Git
             git pull origin master
+
+            # Arrêter et supprimer le conteneur existant
+            docker-compose down
+
+            # Supprimer les images Docker obsolètes
+            docker image prune -f
+
+            # Recréer et redémarrer le conteneur
+            docker-compose up -d --build
           EOF
-#    env:
-#      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-#      SSH_USER: ${{ secrets.SSH_USER }}
-#      SSH_HOST: ${{ secrets.SSH_HOST }}
-#      WORK_DIR: ${{ secrets.WORK_DIR }}
