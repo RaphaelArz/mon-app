@@ -6,7 +6,6 @@ services:
       context: .
       dockerfile: Dockerfile # Utilisation d'un Dockerfile pour construire l'image
     container_name: mon-app
-    working_dir: /usr/src/app
     volumes:
       - .:/usr/src/app # Synchronisation des fichiers locaux
       - /usr/src/app/node_modules # Exclusion des dépendances locales
@@ -14,5 +13,3 @@ services:
       - "3000:3000" # Expose le port 3000
     environment:
       - NODE_ENV=production
-    command: >
-      sh -c "npm install && npm run build && npm start"

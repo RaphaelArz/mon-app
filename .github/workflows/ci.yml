@@ -33,7 +33,8 @@ jobs:
             docker-compose down
 
             # Supprimer les images Docker obsolètes
-            docker image prune -f
+            docker system prune -af
+            docker image prune -af
 
             # Recréer et redémarrer le conteneur
             docker-compose up -d --build
