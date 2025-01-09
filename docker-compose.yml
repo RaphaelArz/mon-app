@@ -2,14 +2,16 @@ version: '3.8'
 
 services:
   app:
-    image: node:16-alpine # Utilisez une version adaptée à votre projet
+    build:
+      context: .
+      dockerfile: Dockerfile # Utilisation d'un Dockerfile pour construire l'image
     container_name: mon-app
     working_dir: /usr/src/app
     volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules # Assurez-vous que les dépendances sont locales
+      - .:/usr/src/app # Synchronisation des fichiers locaux
+      - /usr/src/app/node_modules # Exclusion des dépendances locales
     ports:
-      - "3000:3000" # Port exposé par votre application Node.js
+      - "3000:3000" # Expose le port 3000
     environment:
       - NODE_ENV=production
     command: >
