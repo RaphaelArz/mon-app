@@ -24,9 +24,9 @@ jobs:
         run: |
           ssh $SSH_USER@$SSH_HOST "
             cd $WORK_DIR &&
-            git pull origin master &&
-            docker-compose down &&
-            docker-compose up --build -d
+            git pull origin master
+#            docker-compose down &&
+#            docker-compose up --build -d
           "
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
