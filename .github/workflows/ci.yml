@@ -16,7 +16,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 3.83.99.93 >> ~/.ssh/known_hosts
 
@@ -24,6 +24,7 @@ jobs:
         run: |
           ssh raphaelserv@3.83.99.93 <<EOF
             cd /home/raphaelserv/mon-app
+            git pull origin master
           EOF
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
