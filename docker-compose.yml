@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 services:
   app:
@@ -7,9 +7,7 @@ services:
       dockerfile: Dockerfile # Utilisation d'un Dockerfile pour construire l'image
     container_name: mon-app
     volumes:
-      - .:/usr/src/app # Synchronisation des fichiers locaux
-      - /usr/src/app/node_modules # Exclusion des dépendances locales
+      - ./src:/app/src # Synchronisation des fichiers locaux
+      - ./public:/src/public
     ports:
       - "3000:3000" # Expose le port 3000
-    environment:
-      - NODE_ENV=production

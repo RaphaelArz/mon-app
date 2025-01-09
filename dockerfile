@@ -1,14 +1,23 @@
-FROM node:16-alpine
+# Étape de build
+FROM node:18 as build
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install
+COPY package.json ./
+RUN yarn install --frozen-lockfile
 
 COPY . .
+RUN yarn build
 
-RUN npm run build
+# Étape de production
+FROM node:18-alpine
+
+RUN yarn global add serve
+
+WORKDIR /app
+
+COPY --from=build /app/build .
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["serve", "-s", ".", "-l", "3000"]
