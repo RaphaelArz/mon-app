@@ -22,8 +22,8 @@ jobs:
 
       - name: Deploy application
         run: |
-          ssh $SSH_USER@$SSH_HOST <<EOF
-            cd $WORK_DIR &&
+          ssh raphaelserv@3.83.99.93 <<EOF
+            cd /home/raphaelserv/mon-app &&
             git pull origin master
           EOF
         env:
