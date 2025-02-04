@@ -33,22 +33,41 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy application
-        if: success()  # Exécute cette étape seulement si les tests réussissent
+        if: success()
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
-            # Aller dans le répertoire de l'application
-            cd /home/raphaelserv/mon-app
+            set -e  # Arrête le script en cas d'erreur
+            
+            echo " Sauvegarde de la base de données..."
+            TIMESTAMP=\$(date +"%Y%m%d_%H%M%S")
+            docker-compose up -d db
+            sleep 10  # Laisser MySQL démarrer
+            docker exec mysql_db mysqldump -u myuser -pmypassword mydatabase > backups/db_backup_\$TIMESTAMP.sql
+            echo "Sauvegarde terminée : backups/db_backup_\$TIMESTAMP.sql"
 
-            # Mettre à jour le code depuis le dépôt Git
+            echo "Déploiement de l'application..."
+            cd /home/raphaelserv/mon-app
             git pull origin master
 
-            # Arrêter et supprimer le conteneur existant
+            echo " Arrêt des anciens conteneurs..."
             docker-compose down
 
-            # Supprimer les images Docker obsolètes
+            echo " Nettoyage des images Docker..."
             docker system prune -af
             docker image prune -af
 
-            # Recréer et redémarrer le conteneur
+            echo " Build et redémarrage des conteneurs..."
             docker-compose up -d --build
+
+            echo " Restauration automatique de la base de données..."
+            sleep 10  # Laisser MySQL démarrer
+            LATEST_BACKUP=\$(ls -t backups/db_backup_*.sql | head -n 1)
+            if [ -f "\$LATEST_BACKUP" ]; then
+              cat "\$LATEST_BACKUP" | docker exec -i mysql_db mysql -u myuser -pmypassword mydatabase
+              echo " Restauration terminée !"
+            else
+              echo " Aucune sauvegarde trouvée, base de données vide."
+            fi
+
+            echo " Déploiement terminé avec succès !"
           EOF

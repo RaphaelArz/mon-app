@@ -4,10 +4,38 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile # Utilisation d'un Dockerfile pour construire l'image
+      dockerfile: Dockerfile
     container_name: mon-app
     volumes:
-      - ./src:/app/src # Synchronisation des fichiers locaux
+      - ./src:/app/src
       - ./public:/src/public
     ports:
-      - "3000:3000" # Expose le port 3000
+      - "3000:3000"
+    depends_on:
+      - db # Attendre que la BDD soit prête
+
+  db:
+    image: mysql:latest
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: root
+      MYSQL_PASSWORD: azerty
+      MYSQL_ROOT_PASSWORD: azerty
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backups:/backups # Sauvegarde des données
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: azerty
+
+volumes:
+  mysql_data:
