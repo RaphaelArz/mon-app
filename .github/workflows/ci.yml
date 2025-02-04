@@ -13,7 +13,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # Mets la version adaptée
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test  # Exécute les tests, si ça échoue, le déploiement s'arrête
+
       - name: Set up SSH
+        if: success()  # Exécute cette étape seulement si les tests réussissent
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
@@ -21,6 +33,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy application
+        if: success()  # Exécute cette étape seulement si les tests réussissent
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
             # Aller dans le répertoire de l'application
