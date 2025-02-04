@@ -16,62 +16,39 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18  # Mets la version adaptée
 
       - name: Install dependencies
         run: npm install
 
       - name: Run tests
-        run: npm test
+        run: npm test  # Exécute les tests, si ça échoue, le déploiement s'arrête
 
       - name: Set up SSH
-        if: success()
+        if: success()  # Exécute cette étape seulement si les tests réussissent
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy application
-        if: success()
+        if: success()  # Exécute cette étape seulement si les tests réussissent
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<EOF
-            set -e
-
-            echo "Création du dossier de sauvegarde..."
-            mkdir -p backups
-
-            echo "Sauvegarde de la base de données..."
-            TIMESTAMP=\$(date +"%Y%m%d_%H%M%S")
-            docker-compose up -d db
-            sleep 10
-            docker exec mysql_db mysqldump -u root -pazerty mydatabase > backups/db_backup_\$TIMESTAMP.sql
-            echo "Sauvegarde terminée : backups/db_backup_\$TIMESTAMP.sql"
-
-            echo "Déploiement de l'application..."
+            # Aller dans le répertoire de l'application
             cd /home/raphaelserv/mon-app
-            git reset --hard origin/master
+
+            # Mettre à jour le code depuis le dépôt Git
             git pull origin master
 
-            echo "Arrêt des anciens conteneurs..."
+            # Arrêter et supprimer le conteneur existant
             docker-compose down
 
-            echo "Nettoyage des images Docker..."
+            # Supprimer les images Docker obsolètes
             docker system prune -af
             docker image prune -af
 
-            echo "Build et redémarrage des conteneurs..."
+            # Recréer et redémarrer le conteneur
             docker-compose up -d --build
-
-            echo "Restauration automatique de la base de données..."
-            sleep 10
-            LATEST_BACKUP=\$(ls -t backups/db_backup_*.sql | head -n 1)
-            if [ -f "\$LATEST_BACKUP" ]; then
-              cat "\$LATEST_BACKUP" | docker exec -i mysql_db mysql -u root -pazerty mydatabase
-              echo "Restauration terminée !"
-            else
-              echo "Aucune sauvegarde trouvée, base de données vide."
-            fi
-
-            echo "Déploiement terminé avec succès !"
           EOF
